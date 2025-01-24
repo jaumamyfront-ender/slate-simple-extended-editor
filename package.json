@@ -17,7 +17,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "next dev",
-    "build": "tsup src/index.jsx --format esm,cjs --dts",
+    "build": "tsup ./src/components/extendedTextarea/extendedTextEditor.tsx --format esm,cjs --dts",
     "start": "next start",
     "lint": "next lint"
   },
@@ -26,6 +26,7 @@
     "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@types/slate-react": "^0.50.1",
     "next": "15.1.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -33,7 +34,7 @@
     "slate-dom": "0.111.0",
     "slate-history": "^0.110.3",
     "slate-hyperscript": "^0.100.0",
-    "slate-react": "^0.112.0",
+    "slate-react": "^0.112.1",
     "tsup": "^8.3.5"
   },
   "devDependencies": {
