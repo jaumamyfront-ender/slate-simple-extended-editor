@@ -19,33 +19,27 @@ import {
   withReact,
 } from "slate-react";
 import { Button, Toolbar } from "./buttonsToolbar";
-import bold from "./customIcons/white/bold.svg";
-import center from "./customIcons/white/center.svg";
-import dots from "./customIcons/white/dots.svg";
-import h1 from "./customIcons/white/h1.svg";
-import h2 from "./customIcons/white/h2.svg";
-import italic from "./customIcons/white/italic.svg";
-import left from "./customIcons/white/left.svg";
-import numbers from "./customIcons/white/numbers.svg";
-import right from "./customIcons/white/right.svg";
-import underline from "./customIcons/white/underline.svg";
-import boldGreen from "./customIcons/green/bold.svg";
-import centerGreen from "./customIcons/green/center.svg";
-import dotsGreen from "./customIcons/green/dots.svg";
-import h1Green from "./customIcons/green/h1.svg";
-import h2Green from "./customIcons/green/h2.svg";
-import italicGreen from "./customIcons/green/italic.svg";
-import leftGreen from "./customIcons/green/left.svg";
-import numbersGreen from "./customIcons/green/numbers.svg";
-import rightGreen from "./customIcons/green/right.svg";
-import underlineGreen from "./customIcons/green/underline.svg";
 
 import { useMediaQuery } from "./useMediaQuery";
 import { Node, Text } from "slate";
-
-import { StaticImageData } from "next/image";
 import { EditableProps } from "slate-react/dist/components/editable";
+interface ImageSet {
+  bold: string;
+  center: string;
+  dots: string;
+  h1: string;
+  h2: string;
+  italic: string;
+  left: string;
+  numbers: string;
+  right: string;
+  underline: string;
+}
 
+interface StaticImages {
+  staticIcons: ImageSet;
+  activeIcons: ImageSet;
+}
 type CustomElement = {
   type: string;
   align?: string;
@@ -74,14 +68,10 @@ type EditablePropsWithoutRef = Omit<EditableProps, "ref">;
 interface CustomSlateProps {
   incomingData?: string;
   outgoingData?: (data: string) => void;
+  staticImages: StaticImages;
 }
 
 export type SlateEditorProps = EditablePropsWithoutRef & CustomSlateProps;
-interface ExtendedEditorProps {
-  isStepOne?: boolean;
-  productAndVideoDescription?: string;
-  indexProduct?: number;
-}
 
 type ButtonStateKey =
   | "bold"
@@ -111,8 +101,12 @@ const TEXT_ALIGN_TYPES = ["left", "center", "right", "justify"];
 
 const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   incomingData,
+  staticImages,
   ...editableProps
 }) => {
+  const staticIcons = staticImages.staticIcons;
+  const activeIcons = staticImages.activeIcons;
+
   const deserializeHtml = (html: string): Descendant[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
@@ -495,7 +489,7 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
       <Toolbar>
         <MarkButton
           format="bold"
-          icon={buttonStates.bold ? boldGreen : bold}
+          icon={buttonStates.bold ? activeIcons.bold : staticIcons.bold}
           callback={(isActive) =>
             setButtonStates((prev) => ({ ...prev, bold: isActive }))
           }
@@ -503,7 +497,7 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
         />
         <MarkButton
           format="italic"
-          icon={buttonStates.italic ? italicGreen : italic}
+          icon={buttonStates.italic ? activeIcons.italic : staticIcons.italic}
           callback={(isActive) =>
             setButtonStates((prev) => ({ ...prev, italic: isActive }))
           }
@@ -511,7 +505,11 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
         />
         <MarkButton
           format="underline"
-          icon={buttonStates.underline ? underlineGreen : underline}
+          icon={
+            buttonStates.underline
+              ? activeIcons.underline
+              : staticIcons.underline
+          }
           callback={(isActive) =>
             setButtonStates((prev) => ({ ...prev, underline: isActive }))
           }
@@ -520,45 +518,45 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
 
         <BlockButton
           format="h1"
-          icon={buttonStates.h1 ? h1Green : h1}
+          icon={buttonStates.h1 ? activeIcons.h1 : staticIcons.h1}
           callback={() => updateHeadingButtons("h1")}
           isActive={buttonStates.h1}
         />
         <BlockButton
           format="h2"
-          icon={buttonStates.h2 ? h2Green : h2}
+          icon={buttonStates.h2 ? activeIcons.h2 : staticIcons.h2}
           callback={() => updateHeadingButtons("h2")}
           isActive={buttonStates.h2}
         />
 
         <BlockButton
           format="number"
-          icon={buttonStates.number ? numbersGreen : numbers}
+          icon={buttonStates.number ? activeIcons.numbers : staticIcons.numbers}
           callback={() => updateListButtons("number")}
           isActive={buttonStates.number}
         />
         <BlockButton
           format="dots"
-          icon={buttonStates.dots ? dotsGreen : dots}
+          icon={buttonStates.dots ? activeIcons.dots : staticIcons.dots}
           callback={() => updateListButtons("dots")}
           isActive={buttonStates.dots}
         />
 
         <BlockButton
           format="left"
-          icon={buttonStates.left ? leftGreen : left}
+          icon={buttonStates.left ? activeIcons.left : staticIcons.left}
           callback={() => updateAlignmentButtons("left")}
           isActive={buttonStates.left}
         />
         <BlockButton
           format="center"
-          icon={buttonStates.center ? centerGreen : center}
+          icon={buttonStates.center ? activeIcons.center : staticIcons.center}
           callback={() => updateAlignmentButtons("center")}
           isActive={buttonStates.center}
         />
         <BlockButton
           format="right"
-          icon={buttonStates.right ? rightGreen : right}
+          icon={buttonStates.right ? activeIcons.right : staticIcons.right}
           callback={() => updateAlignmentButtons("right")}
           isActive={buttonStates.right}
         />
@@ -808,7 +806,7 @@ const FORMAT_MAPPING = {
 };
 const BlockButton: React.FC<{
   format: string;
-  icon: StaticImageData;
+  icon: string;
   callback: () => void;
   isActive: boolean;
 }> = ({ format, icon, callback, isActive }) => {
@@ -840,7 +838,7 @@ const BlockButton: React.FC<{
           justifyContent: "center",
         }}
       >
-        <img src={icon.src} alt="" style={{ objectFit: "cover" }} />
+        <img src={icon} alt="" style={{ objectFit: "cover" }} />
       </div>
     </Button>
   );
@@ -848,7 +846,7 @@ const BlockButton: React.FC<{
 
 const MarkButton: React.FC<{
   format: string;
-  icon: StaticImageData;
+  icon: string;
   callback: (isActive: boolean) => void;
   isActive: boolean;
 }> = ({ format, icon, callback, isActive }) => {
@@ -874,7 +872,7 @@ const MarkButton: React.FC<{
           justifyContent: "center",
         }}
       >
-        <img src={icon.src} alt="" style={{ objectFit: "cover" }} />
+        <img src={icon} alt="" style={{ objectFit: "cover" }} />
       </div>
     </Button>
   );
