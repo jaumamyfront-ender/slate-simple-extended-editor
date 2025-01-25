@@ -1,7 +1,7 @@
 import React, { ReactNode, Ref, PropsWithChildren } from "react";
 import ReactDOM from "react-dom";
 import { cx, css } from "@emotion/css";
-import "./styles.css";
+// import "./styles.css";
 
 interface BaseProps {
   className?: string; // Made optional
