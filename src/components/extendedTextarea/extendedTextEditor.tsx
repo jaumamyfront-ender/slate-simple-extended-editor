@@ -102,7 +102,6 @@ const TEXT_ALIGN_TYPES = ["left", "center", "right", "justify"];
 const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   incomingData,
   staticImages,
-  isTurnOnImages,
   ...editableProps
 }) => {
   const staticIcons = staticImages.staticIcons;
