@@ -9,4 +9,5 @@ export default defineConfig({
     ".svg": "file", // Обрабатывает SVG как файлы
   },
   clean: true, // Удаляет старую сборку перед новой
+  onSuccess: 'cpx "public/**/*" dist',
 });
