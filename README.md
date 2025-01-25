@@ -22,7 +22,7 @@ Key Features and Improvements:
   note:original lib/repo/author =>(all origin docs)https://docs.slatejs.org (orogin author and repo)https://github.com/ianstormtaylor/slate
   How to Fats-Start=>
   1.type in console yarn add slate-simple-editor
-  2.when lib is installed then find library in node_modules ,path is=>node-modules=>slate-simple-editor=>public=>then copy folder customIcons to your public folder
+  2.when lib is installed then find library in node_modules ,path is=>node-modules=>slate-simple-editor=>public=>then copy folder customIcons to your public folder and then use this sdandart icons or add your own images
   2.then copy this code(dependece which framework you use react or next,see below down code)=>
   // when use React or something else
   //"use client";
@@ -58,6 +58,7 @@ const SlateSimpleEditor = dynamic(
 {
 ssr: false,
 loading: () => (
+
 <div className="w-full h-[200px] bg-[rgb(72,76,82)] border border-gray-600 rounded-lg flex items-center justify-center flex-col self-center" />
 ),
 }
