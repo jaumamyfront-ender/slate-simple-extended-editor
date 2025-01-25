@@ -22,12 +22,12 @@ Key Features and Improvements:
   note:original lib/repo/author =>(all origin docs)https://docs.slatejs.org (orogin author and repo)https://github.com/ianstormtaylor/slate
   How to Fats-Start=>
   1.type in console yarn add slate-simple-editor
-  2.when lib is installed then find library in node_modules ,path is=>node-modules=>slate-simple-editor=>public=>then copy folder customIcons to your public folder and then use this sdandart icons or add your own images
+  2.when lib is installed then find library in node_modules ,path is=>node-modules=>editor=>public=>then copy folder customIcons to your public folder and then use this sdandart icons or add your own images
   2.then copy this code(dependece which framework you use react or next,see below down code)=>
   // when use React or something else
   //"use client";
   //import React from "react";
-  // import SlateSimpleExtendedEditor from "slate/dist/extendedTextEditor";
+  // import SlateSimpleExtendedEditor from "editor/dist/extendedTextEditor";
   // const incommingdata =
   // "<h2><u><em><strong>Simple version of Slate.js Rich Text Editor lib</strong></em></u></h2>\n<h2><u><em><strong>just use without pain!;-)</strong></em></u></h2>\n<p><u><em>A streamlined, TypeScript-friendly implementation of Slate.js editor with practical solutions to common issues and undocumented features for Next js latest version</em></u></p>\n<p><strong>This version prioritizes stability and ease of use over complex features, making it ideal for projects that need reliable rich text editing without the complexity of the full Slate.js ecosystem.</strong></p>\n<p>Key Features and Improvements:</p>\n<p><em>- 1.added function that allows you click on button like switches and esy to customize them,just import you image version of button and that it!</em></p>\n<p><em>- 2.fix many typescript undocumented problems with typescript in next js</em></p>\n<p><em>- 3.add missed serealization and deserealization(put data into editor and get edited data from editor):</em></p>\n<p><em> 3.1 just put simple text or html and get converted automaticly all values inputs</em></p>\n<p><strong>note:</strong></p>\n<p><em>Customization</em></p>\n<ol><li><em>For additional features or modifications, refer to the official Slate.js documentation. This implementation focuses on common use cases while maintaining extensibility for specific needs.</em></li>\n<li><em><strong>note</strong></em><em>:original lib/repo/author =>(all origin docs)https://docs.slatejs.org (orogin author and repo)https://github.com/ianstormtaylor/slate</em></li>\n</ol>\n<ul><li><em>note:if you dont need some extra feature or customization or you wanna use it like code (not instaalnig lib) than go to my git =></em></li>\n</ul>\n";
   // export default function Home() {
