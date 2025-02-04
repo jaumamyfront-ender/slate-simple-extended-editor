@@ -23,8 +23,8 @@ import { Button, Toolbar } from "./buttonsToolbar";
 import { useMediaQuery } from "./useMediaQuery";
 import { Node, Text } from "slate";
 import { EditableProps } from "slate-react/dist/components/editable";
-import { rgxFindUrls } from "../../utils/findUrl";
-import { FieldTooltipError } from "../../uiHelpers/tooltipError";
+import { relaxedUrlRegex } from "../../utils/findUrl";
+
 interface ImageSet {
   bold: string;
   center: string;
@@ -97,7 +97,7 @@ interface CustomSlateProps extends ValidatorProps {
   staticImages: StaticImages;
   childrenErrorHint?: React.ReactNode;
   childrenLengthHint?: React.ReactNode;
-  onValidate: (result: ValidationResult) => void; // Send data UP
+  onValidate: (result: ValidationResult) => void;
 }
 
 export type SlateEditorProps = EditablePropsWithoutRef & CustomSlateProps;
@@ -388,90 +388,59 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const [editorValue, setEditorValue] = useState<Descendant[]>(() =>
     initialValueFromProps(incomingData)
   );
-  const validateText = (
-    content: string,
-    config: ValidatorConfig
-  ): ValidationResult => {
-    // Clean HTML tags
 
-    const tempDiv = document.createElement("div");
-    //clean text
-    tempDiv.innerHTML = content;
-    const cleanText = tempDiv.textContent || tempDiv.innerText || "";
-    const textLength = cleanText.length;
-    const min = minLengthDecription
-      ? minLengthDecription
-      : "The minimum number of characters is:";
-    const max = maxLengthDecription
-      ? maxLengthDecription
-      : "The maximum number of characters is:";
-    const url = checkUrlsDecription
-      ? checkUrlsDecription
-      : "The video description cannot contain links";
+  const validateText = useCallback(
+    (content: string, config: ValidatorConfig): ValidationResult => {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = content;
+      const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+      const textLength = cleanText.length;
 
-    //check urls
-    const hasUrls = config.checkUrls ? rgxFindUrls.test(cleanText) : false;
-    !rgxFindUrls.test(cleanText as string) || "notUseLinksInDescriptionVideo";
-    console.log("hasUrls", hasUrls);
-    //check length
-    let errorMessage: Error | undefined;
-    if (config.enableValidation) {
-      // Length validation
-      if (config.minLength && textLength < config.minLength) {
-        errorMessage = {
-          message: `${min}`,
-          type: "minLength",
-        };
+      let errorMessage: Error | undefined;
+      if (config.enableValidation) {
+        if (config.minLength && textLength < config.minLength) {
+          errorMessage = {
+            message: `Minimum characters required: ${config.minLength}`,
+            type: "minLength",
+          };
+        }
+
+        if (config.maxLength && textLength > config.maxLength) {
+          errorMessage = {
+            message: `Maximum characters allowed: ${config.maxLength}`,
+            type: "maxLength",
+          };
+        }
+
+        if (config.checkUrls && relaxedUrlRegex.test(cleanText)) {
+          errorMessage = {
+            message: "Links are not allowed.",
+            type: "dontUseLinksinDescription",
+          };
+        }
       }
 
-      if (config.maxLength && textLength > config.maxLength) {
-        errorMessage = {
-          message: `${max}`,
-          type: "maxLength",
-        };
-      }
-      // URL validation
-      if (config.checkUrls && hasUrls) {
-        errorMessage = {
-          message: `${url}`,
-          type: "dontUseLinksinDescription",
-        };
-      }
-    }
-    setError(errorMessage);
-    const validationResult: ValidationResult = {
-      length: textLength,
-      error: errorMessage,
-    };
-    onValidate(validationResult);
+      setError(errorMessage);
+      return { length: textLength, error: errorMessage };
+    },
+    []
+  );
 
-    return {
-      length: textLength,
-      error: errorMessage,
-    };
-  };
-  useEffect(() => {
-    const html = serializeToHtml(editorValue);
-    const result = validateText(html, {
-      enableValidation: enableValidation,
-      checkUrls: checkUrls,
-      maxLength: maxLength,
-      minLength: minLength,
-    });
-    onValidate(result);
-  }, [validateText]);
-  const [valueLength, setValueLength] = useState<number>(0);
-  const handleEditorChange = (value: Descendant[]) => {
-    setEditorValue(value);
-    const html = serializeToHtml(value);
-    const result = validateText(html, {
-      enableValidation: enableValidation,
-      checkUrls: checkUrls,
-      maxLength: maxLength,
-      minLength: minLength,
-    });
-    setValueLength(result.length);
-  };
+  const handleEditorChange = useCallback(
+    (value: Descendant[]) => {
+      setEditorValue(value);
+      const html = serializeToHtml(value);
+      const result = validateText(html, {
+        enableValidation: enableValidation,
+        checkUrls: checkUrls,
+        maxLength: maxLength,
+        minLength: minLength,
+      });
+      onValidate(result);
+    },
+    [setEditorValue, onValidate]
+  );
+
   const [buttonStates, setButtonStates] = useState({
     bold: false,
     italic: false,
@@ -488,6 +457,11 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   useEffect(() => {
     if (incomingData) {
       const newValue = initialValueFromProps(incomingData);
+      const currentValue = editor.children;
+
+      if (JSON.stringify(currentValue) === JSON.stringify(newValue)) {
+        return;
+      }
       Transforms.select(editor, { path: [0, 0], offset: 0 });
       Transforms.delete(editor, {
         at: {
@@ -510,7 +484,7 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
         maxLength: maxLength,
         minLength: minLength,
       });
-      setValueLength(result.length);
+      onValidate(result);
     }
   }, [incomingData, editor]);
 
@@ -759,18 +733,6 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
       />
       {childrenLengthHint}
       {error && childrenErrorHint}
-      {/* {maxLength && (
-        <span tw="absolute bottom-5 right-4 text-gray-200 text-2xs">{`${valueLength?.toString()}/${maxLength}`}</span>
-      )}
-      {error && (
-        <FieldTooltipError
-          className="fieldtooltiperror"
-          error={error}
-          maxLength={maxLength}
-          minLength={minLength}
-          isAbsolute
-        />
-      )} */}
       {isMobile && openToolbarOnMobile && renderToolbar()}
     </Slate>
   );
