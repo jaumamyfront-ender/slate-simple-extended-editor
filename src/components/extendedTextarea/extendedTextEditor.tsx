@@ -1,5 +1,11 @@
 import isHotkey from "is-hotkey";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   BaseEditor,
   createEditor,
@@ -19,10 +25,13 @@ import {
   withReact,
 } from "slate-react";
 import { Button, Toolbar } from "./buttonsToolbar";
+import isEqual from "lodash/isEqual";
 
 import { useMediaQuery } from "./useMediaQuery";
 import { Node, Text } from "slate";
 import { EditableProps } from "slate-react/dist/components/editable";
+import { relaxedUrlRegex } from "../../utils/findUrl";
+
 interface ImageSet {
   bold: string;
   center: string;
@@ -34,6 +43,30 @@ interface ImageSet {
   numbers: string;
   right: string;
   underline: string;
+}
+interface ValidatorProps {
+  minLength?: number;
+  maxLength?: number;
+  checkUrls?: boolean;
+  enableValidation?: boolean;
+  minLengthDecription?: string;
+  maxLengthDecription?: string;
+  checkUrlsDecription?: string;
+}
+interface ValidatorConfig {
+  enableValidation?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  checkUrls?: boolean;
+}
+
+export interface Error {
+  message: string;
+  type: "maxLength" | "minLength" | "dontUseLinksinDescription";
+}
+interface ValidationResult {
+  length: number;
+  error: Error | undefined;
 }
 
 interface StaticImages {
@@ -65,10 +98,13 @@ declare module "slate" {
 
 type EditablePropsWithoutRef = Omit<EditableProps, "ref">;
 
-interface CustomSlateProps {
+interface CustomSlateProps extends ValidatorProps {
   incomingData?: string;
   outgoingData?: (data: string) => void;
   staticImages: StaticImages;
+  childrenErrorHint?: React.ReactNode;
+  childrenLengthHint?: React.ReactNode;
+  onValidate: (result: ValidationResult) => void;
 }
 
 export type SlateEditorProps = EditablePropsWithoutRef & CustomSlateProps;
@@ -102,6 +138,16 @@ const TEXT_ALIGN_TYPES = ["left", "center", "right", "justify"];
 const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   incomingData,
   staticImages,
+  checkUrls,
+  enableValidation,
+  maxLength,
+  minLength,
+  minLengthDecription,
+  maxLengthDecription,
+  checkUrlsDecription,
+  childrenErrorHint,
+  childrenLengthHint,
+  onValidate,
   ...editableProps
 }) => {
   const staticIcons = staticImages.staticIcons;
@@ -344,10 +390,61 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [openToolbarOnMobile, setopenToolbarOnMobile] =
     useState<boolean>(false);
+  const [error, setError] = useState<any>();
 
   const [editorValue, setEditorValue] = useState<Descendant[]>(() =>
     initialValueFromProps(incomingData)
   );
+
+  const validateText = useCallback(
+    (content: string, config: ValidatorConfig): ValidationResult => {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = content;
+      const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+      const textLength = cleanText.length;
+
+      let errorMessage: Error | undefined;
+      if (config.enableValidation) {
+        if (config.minLength && textLength < config.minLength) {
+          errorMessage = {
+            message: `Minimum characters required: ${config.minLength}`,
+            type: "minLength",
+          };
+        }
+
+        if (config.maxLength && textLength > config.maxLength) {
+          errorMessage = {
+            message: `Maximum characters allowed: ${config.maxLength}`,
+            type: "maxLength",
+          };
+        }
+
+        if (config.checkUrls && relaxedUrlRegex.test(cleanText)) {
+          errorMessage = {
+            message: "Links are not allowed.",
+            type: "dontUseLinksinDescription",
+          };
+        }
+      }
+
+      setError(errorMessage);
+      return { length: textLength, error: errorMessage };
+    },
+    []
+  );
+
+  const handleEditorChange = (value: Descendant[]) => {
+    setEditorValue(value);
+    const html = serializeToHtml(value);
+    const result = validateText(html, {
+      enableValidation: enableValidation,
+      checkUrls: checkUrls,
+      maxLength: maxLength,
+      minLength: minLength,
+    });
+    onValidate(result);
+  };
+
   const [buttonStates, setButtonStates] = useState({
     bold: false,
     italic: false,
@@ -361,11 +458,81 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
     right: false,
   });
 
-  useEffect(() => {
-    if (incomingData !== undefined) {
-      setEditorValue(initialValueFromProps(incomingData));
-    }
-  }, [incomingData]);
+  // useEffect(() => {
+  //   const newValue = initialValueFromProps(incomingData);
+  //   const currentValue = editor.children;
+  //   if (JSON.stringify(currentValue) === JSON.stringify(newValue)) return;
+  //   if (!incomingData || isEqual(prevDataRef.current, incomingData)) return;
+  //   if (incomingData) {
+  //     const newValue = initialValueFromProps(incomingData);
+  //     const currentValue = editor.children;
+
+  //     if (JSON.stringify(currentValue) === JSON.stringify(newValue)) {
+  //       return;
+  //     }
+  //     Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //     Transforms.delete(editor, {
+  //       at: {
+  //         anchor: { path: [0, 0], offset: 0 },
+  //         focus: { path: [0, 0], offset: 0 },
+  //       },
+  //     });
+
+  //     Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //     if (editor.selection) {
+  //       Transforms.delete(editor, { at: editor.selection });
+  //     }
+
+  //     Transforms.removeNodes(editor);
+  //     Transforms.insertNodes(editor, newValue);
+  //     const html = serializeToHtml(newValue);
+  //     const result = validateText(html, {
+  //       enableValidation: enableValidation,
+  //       checkUrls: checkUrls,
+  //       maxLength: maxLength,
+  //       minLength: minLength,
+  //     });
+  //     onValidate(result);
+  //   }
+  // }, [incomingData]);
+
+  const prevDataRef = useRef<string | null>(null);
+
+  // useEffect(() => {
+  //   if (!incomingData || isEqual(prevDataRef.current, incomingData)) return;
+  //   prevDataRef.current = incomingData; // Store previous data
+  //   const newValue = initialValueFromProps(incomingData);
+  //   const currentValue = editor.children;
+  //   if (JSON.stringify(currentValue) === JSON.stringify(newValue)) return;
+
+  //   if (isEqual(currentValue, newValue)) return;
+
+  //   Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //   Transforms.delete(editor, {
+  //     at: {
+  //       anchor: { path: [0, 0], offset: 0 },
+  //       focus: { path: [0, 0], offset: 0 },
+  //     },
+  //   });
+
+  //   Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //   if (editor.selection) {
+  //     Transforms.delete(editor, { at: editor.selection });
+  //   }
+
+  //   Transforms.removeNodes(editor);
+  //   Transforms.insertNodes(editor, newValue);
+
+  //   const html = serializeToHtml(newValue);
+  //   const result = validateText(html, {
+  //     enableValidation,
+  //     checkUrls,
+  //     maxLength,
+  //     minLength,
+  //   });
+
+  //   onValidate(result);
+  // }, [incomingData]);
 
   const ALIGNMENT_BUTTONS: ButtonStateKey[] = ["left", "center", "right"];
   // const FORMATTING_BUTTONS: ButtonStateKey[] = ['bold', 'italic', 'underline']
@@ -565,7 +732,11 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   };
 
   return (
-    <Slate editor={editor} initialValue={editorValue} onChange={setEditorValue}>
+    <Slate
+      editor={editor}
+      initialValue={editorValue}
+      onChange={handleEditorChange}
+    >
       {isDesktop && !isMobile && renderToolbar()}
 
       <Editable
@@ -600,11 +771,14 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
           overflow: "scroll",
           wordWrap: "break-word",
           wordBreak: "break-all",
+          position: "relative",
         }}
         onFocus={() => {
           isMobile && setopenToolbarOnMobile(true);
         }}
       />
+      {childrenLengthHint}
+      {error && childrenErrorHint}
       {isMobile && openToolbarOnMobile && renderToolbar()}
     </Slate>
   );
