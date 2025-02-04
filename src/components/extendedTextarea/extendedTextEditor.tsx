@@ -23,6 +23,8 @@ import { Button, Toolbar } from "./buttonsToolbar";
 import { useMediaQuery } from "./useMediaQuery";
 import { Node, Text } from "slate";
 import { EditableProps } from "slate-react/dist/components/editable";
+import { rgxFindUrls } from "../../utils/findUrl";
+import { FieldTooltipError } from "../../uiHelpers/tooltipError";
 interface ImageSet {
   bold: string;
   center: string;
@@ -34,6 +36,30 @@ interface ImageSet {
   numbers: string;
   right: string;
   underline: string;
+}
+interface ValidatorProps {
+  minLength?: number;
+  maxLength?: number;
+  checkUrls?: boolean;
+  enableValidation?: boolean;
+  minLengthDecription?: string;
+  maxLengthDecription?: string;
+  checkUrlsDecription?: string;
+}
+interface ValidatorConfig {
+  enableValidation?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  checkUrls?: boolean;
+}
+
+export interface Error {
+  message: string;
+  type: "maxLength" | "minLength" | "dontUseLinksinDescription";
+}
+interface ValidationResult {
+  length: number;
+  error: Error | undefined;
 }
 
 interface StaticImages {
@@ -65,10 +91,13 @@ declare module "slate" {
 
 type EditablePropsWithoutRef = Omit<EditableProps, "ref">;
 
-interface CustomSlateProps {
+interface CustomSlateProps extends ValidatorProps {
   incomingData?: string;
   outgoingData?: (data: string) => void;
   staticImages: StaticImages;
+  childrenErrorHint?: React.ReactNode;
+  childrenLengthHint?: React.ReactNode;
+  onValidate: (result: ValidationResult) => void; // Send data UP
 }
 
 export type SlateEditorProps = EditablePropsWithoutRef & CustomSlateProps;
@@ -102,6 +131,16 @@ const TEXT_ALIGN_TYPES = ["left", "center", "right", "justify"];
 const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   incomingData,
   staticImages,
+  checkUrls,
+  enableValidation,
+  maxLength,
+  minLength,
+  minLengthDecription,
+  maxLengthDecription,
+  checkUrlsDecription,
+  childrenErrorHint,
+  childrenLengthHint,
+  onValidate,
   ...editableProps
 }) => {
   const staticIcons = staticImages.staticIcons;
@@ -344,10 +383,95 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [openToolbarOnMobile, setopenToolbarOnMobile] =
     useState<boolean>(false);
+  const [error, setError] = useState<any>();
 
   const [editorValue, setEditorValue] = useState<Descendant[]>(() =>
     initialValueFromProps(incomingData)
   );
+  const validateText = (
+    content: string,
+    config: ValidatorConfig
+  ): ValidationResult => {
+    // Clean HTML tags
+
+    const tempDiv = document.createElement("div");
+    //clean text
+    tempDiv.innerHTML = content;
+    const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+    const textLength = cleanText.length;
+    const min = minLengthDecription
+      ? minLengthDecription
+      : "The minimum number of characters is:";
+    const max = maxLengthDecription
+      ? maxLengthDecription
+      : "The maximum number of characters is:";
+    const url = checkUrlsDecription
+      ? checkUrlsDecription
+      : "The video description cannot contain links";
+
+    //check urls
+    const hasUrls = config.checkUrls ? rgxFindUrls.test(cleanText) : false;
+    !rgxFindUrls.test(cleanText as string) || "notUseLinksInDescriptionVideo";
+    console.log("hasUrls", hasUrls);
+    //check length
+    let errorMessage: Error | undefined;
+    if (config.enableValidation) {
+      // Length validation
+      if (config.minLength && textLength < config.minLength) {
+        errorMessage = {
+          message: `${min}`,
+          type: "minLength",
+        };
+      }
+
+      if (config.maxLength && textLength > config.maxLength) {
+        errorMessage = {
+          message: `${max}`,
+          type: "maxLength",
+        };
+      }
+      // URL validation
+      if (config.checkUrls && hasUrls) {
+        errorMessage = {
+          message: `${url}`,
+          type: "dontUseLinksinDescription",
+        };
+      }
+    }
+    setError(errorMessage);
+    const validationResult: ValidationResult = {
+      length: textLength,
+      error: errorMessage,
+    };
+    onValidate(validationResult);
+
+    return {
+      length: textLength,
+      error: errorMessage,
+    };
+  };
+  useEffect(() => {
+    const html = serializeToHtml(editorValue);
+    const result = validateText(html, {
+      enableValidation: enableValidation,
+      checkUrls: checkUrls,
+      maxLength: maxLength,
+      minLength: minLength,
+    });
+    onValidate(result);
+  }, [validateText]);
+  const [valueLength, setValueLength] = useState<number>(0);
+  const handleEditorChange = (value: Descendant[]) => {
+    setEditorValue(value);
+    const html = serializeToHtml(value);
+    const result = validateText(html, {
+      enableValidation: enableValidation,
+      checkUrls: checkUrls,
+      maxLength: maxLength,
+      minLength: minLength,
+    });
+    setValueLength(result.length);
+  };
   const [buttonStates, setButtonStates] = useState({
     bold: false,
     italic: false,
@@ -362,10 +486,33 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   });
 
   useEffect(() => {
-    if (incomingData !== undefined) {
-      setEditorValue(initialValueFromProps(incomingData));
+    if (incomingData) {
+      const newValue = initialValueFromProps(incomingData);
+      Transforms.select(editor, { path: [0, 0], offset: 0 });
+      Transforms.delete(editor, {
+        at: {
+          anchor: { path: [0, 0], offset: 0 },
+          focus: { path: [0, 0], offset: 0 },
+        },
+      });
+
+      Transforms.select(editor, { path: [0, 0], offset: 0 });
+      if (editor.selection) {
+        Transforms.delete(editor, { at: editor.selection });
+      }
+
+      Transforms.removeNodes(editor);
+      Transforms.insertNodes(editor, newValue);
+      const html = serializeToHtml(newValue);
+      const result = validateText(html, {
+        enableValidation: enableValidation,
+        checkUrls: checkUrls,
+        maxLength: maxLength,
+        minLength: minLength,
+      });
+      setValueLength(result.length);
     }
-  }, [incomingData]);
+  }, [incomingData, editor]);
 
   const ALIGNMENT_BUTTONS: ButtonStateKey[] = ["left", "center", "right"];
   // const FORMATTING_BUTTONS: ButtonStateKey[] = ['bold', 'italic', 'underline']
@@ -565,7 +712,11 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   };
 
   return (
-    <Slate editor={editor} initialValue={editorValue} onChange={setEditorValue}>
+    <Slate
+      editor={editor}
+      initialValue={editorValue}
+      onChange={handleEditorChange}
+    >
       {isDesktop && !isMobile && renderToolbar()}
 
       <Editable
@@ -600,11 +751,26 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
           overflow: "scroll",
           wordWrap: "break-word",
           wordBreak: "break-all",
+          position: "relative",
         }}
         onFocus={() => {
           isMobile && setopenToolbarOnMobile(true);
         }}
       />
+      {childrenLengthHint}
+      {error && childrenErrorHint}
+      {/* {maxLength && (
+        <span tw="absolute bottom-5 right-4 text-gray-200 text-2xs">{`${valueLength?.toString()}/${maxLength}`}</span>
+      )}
+      {error && (
+        <FieldTooltipError
+          className="fieldtooltiperror"
+          error={error}
+          maxLength={maxLength}
+          minLength={minLength}
+          isAbsolute
+        />
+      )} */}
       {isMobile && openToolbarOnMobile && renderToolbar()}
     </Slate>
   );
