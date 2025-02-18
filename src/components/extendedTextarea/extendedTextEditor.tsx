@@ -38,7 +38,6 @@ interface ImageSet {
 
 interface StaticImages {
   staticIcons: ImageSet;
-  activeIcons: ImageSet;
 }
 type CustomElement = {
   type: string;
@@ -61,6 +60,11 @@ declare module "slate" {
     Element: CustomElement & CustomElement;
     Text: CustomText;
   }
+}
+interface BlockButtonProps {
+  format: string;
+  icon: string;
+  formatIndex?: string;
 }
 
 type EditablePropsWithoutRef = Omit<EditableProps, "ref">;
@@ -105,7 +109,6 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   ...editableProps
 }) => {
   const staticIcons = staticImages.staticIcons;
-  const activeIcons = staticImages.activeIcons;
 
   const deserializeHtml = (html: string): Descendant[] => {
     const parser = new DOMParser();
@@ -348,80 +351,12 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const [editorValue, setEditorValue] = useState<Descendant[]>(() =>
     initialValueFromProps(incomingData)
   );
-  const [buttonStates, setButtonStates] = useState({
-    bold: false,
-    italic: false,
-    underline: false,
-    h1: false,
-    h2: false,
-    number: false,
-    dots: false,
-    left: false,
-    center: false,
-    right: false,
-  });
 
   useEffect(() => {
     if (incomingData !== undefined) {
       setEditorValue(initialValueFromProps(incomingData));
     }
   }, [incomingData]);
-
-  const ALIGNMENT_BUTTONS: ButtonStateKey[] = ["left", "center", "right"];
-  // const FORMATTING_BUTTONS: ButtonStateKey[] = ['bold', 'italic', 'underline']
-  const HEADING_BUTTONS: ButtonStateKey[] = ["h1", "h2"];
-  const LIST_BUTTONS: ButtonStateKey[] = ["number", "dots"];
-  const updateAlignmentButtons = (activeButton: ButtonStateKey) => {
-    setButtonStates((prev) => {
-      const newStates = { ...prev };
-
-      if (prev[activeButton]) {
-        newStates[activeButton] = false;
-      } else {
-        ALIGNMENT_BUTTONS.forEach((button) => {
-          newStates[button] = false;
-        });
-        newStates[activeButton] = true;
-      }
-      return newStates;
-    });
-  };
-
-  const updateListButtons = (activeButton: ButtonStateKey) => {
-    setButtonStates((prev) => {
-      const newStates = { ...prev };
-
-      if (prev[activeButton]) {
-        LIST_BUTTONS.forEach((button) => {
-          newStates[button] = false;
-        });
-      } else {
-        LIST_BUTTONS.forEach((button) => {
-          newStates[button] = false;
-        });
-        newStates[activeButton] = true;
-      }
-      return newStates;
-    });
-  };
-
-  const updateHeadingButtons = (activeButton: ButtonStateKey) => {
-    setButtonStates((prev) => {
-      const newStates = { ...prev };
-
-      if (prev[activeButton]) {
-        HEADING_BUTTONS.forEach((button) => {
-          newStates[button] = false;
-        });
-      } else {
-        HEADING_BUTTONS.forEach((button) => {
-          newStates[button] = false;
-        });
-        newStates[activeButton] = true;
-      }
-      return newStates;
-    });
-  };
 
   const serializeToHtml = (nodes: Node[]): string => {
     return nodes
@@ -487,79 +422,16 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const renderToolbar = () => {
     return (
       <Toolbar>
-        <MarkButton
-          format="bold"
-          icon={buttonStates.bold ? activeIcons.bold : staticIcons.bold}
-          callback={(isActive) =>
-            setButtonStates((prev) => ({ ...prev, bold: isActive }))
-          }
-          isActive={buttonStates.bold}
-        />
-        <MarkButton
-          format="italic"
-          icon={buttonStates.italic ? activeIcons.italic : staticIcons.italic}
-          callback={(isActive) =>
-            setButtonStates((prev) => ({ ...prev, italic: isActive }))
-          }
-          isActive={buttonStates.italic}
-        />
-        <MarkButton
-          format="underline"
-          icon={
-            buttonStates.underline
-              ? activeIcons.underline
-              : staticIcons.underline
-          }
-          callback={(isActive) =>
-            setButtonStates((prev) => ({ ...prev, underline: isActive }))
-          }
-          isActive={buttonStates.underline}
-        />
-
-        <BlockButton
-          format="h1"
-          icon={buttonStates.h1 ? activeIcons.h1 : staticIcons.h1}
-          callback={() => updateHeadingButtons("h1")}
-          isActive={buttonStates.h1}
-        />
-        <BlockButton
-          format="h2"
-          icon={buttonStates.h2 ? activeIcons.h2 : staticIcons.h2}
-          callback={() => updateHeadingButtons("h2")}
-          isActive={buttonStates.h2}
-        />
-
-        <BlockButton
-          format="number"
-          icon={buttonStates.number ? activeIcons.numbers : staticIcons.numbers}
-          callback={() => updateListButtons("number")}
-          isActive={buttonStates.number}
-        />
-        <BlockButton
-          format="dots"
-          icon={buttonStates.dots ? activeIcons.dots : staticIcons.dots}
-          callback={() => updateListButtons("dots")}
-          isActive={buttonStates.dots}
-        />
-
-        <BlockButton
-          format="left"
-          icon={buttonStates.left ? activeIcons.left : staticIcons.left}
-          callback={() => updateAlignmentButtons("left")}
-          isActive={buttonStates.left}
-        />
-        <BlockButton
-          format="center"
-          icon={buttonStates.center ? activeIcons.center : staticIcons.center}
-          callback={() => updateAlignmentButtons("center")}
-          isActive={buttonStates.center}
-        />
-        <BlockButton
-          format="right"
-          icon={buttonStates.right ? activeIcons.right : staticIcons.right}
-          callback={() => updateAlignmentButtons("right")}
-          isActive={buttonStates.right}
-        />
+        <MarkButton format="bold" icon={staticIcons.bold} />
+        <MarkButton format="italic" icon={staticIcons.italic} />
+        <MarkButton format="underline" icon={staticIcons.underline} />
+        <BlockButton format="heading-one" icon={staticIcons.h1} />
+        <BlockButton format="heading-two" icon={staticIcons.h2} />
+        <BlockButton format="numbered-list" icon={staticIcons.numbers} />
+        <BlockButton format="bulleted-list" icon={staticIcons.dots} />
+        <BlockButton format="left" icon={staticIcons.left} />
+        <BlockButton format="center" icon={staticIcons.center} />
+        <BlockButton format="right" icon={staticIcons.right} />
       </Toolbar>
     );
   };
@@ -804,29 +676,29 @@ const FORMAT_MAPPING = {
   center: "center",
   right: "right",
 };
-const BlockButton: React.FC<{
-  format: string;
-  icon: string;
-  callback: () => void;
-  isActive: boolean;
-}> = ({ format, icon, callback, isActive }) => {
+
+const BlockButton: React.FC<BlockButtonProps> = ({
+  format,
+  icon,
+  formatIndex,
+}) => {
   const editor = useSlate();
-  const actualFormat =
-    FORMAT_MAPPING[format as keyof typeof FORMAT_MAPPING] || format;
+  const isActive = isBlockActive(
+    editor,
+    format,
+    TEXT_ALIGN_TYPES.includes(format) ? "align" : "type"
+  );
 
   return (
     <Button
-      onClick={() => {
-        callback();
-      }}
       active={isBlockActive(
         editor,
         format,
-        TEXT_ALIGN_TYPES.includes(actualFormat) ? "align" : "type"
+        TEXT_ALIGN_TYPES.includes(format) ? "align" : "type"
       )}
       onMouseDown={(event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
-        toggleBlock(editor, actualFormat);
+        toggleBlock(editor, format);
       }}
     >
       <div
@@ -836,6 +708,9 @@ const BlockButton: React.FC<{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          filter: isActive
+            ? "invert(31%) sepia(92%) saturate(666%) hue-rotate(100deg)"
+            : "none",
         }}
       >
         <img src={icon} alt="" style={{ objectFit: "cover" }} />
@@ -844,19 +719,12 @@ const BlockButton: React.FC<{
   );
 };
 
-const MarkButton: React.FC<{
-  format: string;
-  icon: string;
-  callback: (isActive: boolean) => void;
-  isActive: boolean;
-}> = ({ format, icon, callback, isActive }) => {
+const MarkButton: React.FC<BlockButtonProps> = ({ format, icon }) => {
   const editor = useSlate();
+  const isActive = isMarkActive(editor, format);
 
   return (
     <Button
-      onClick={() => {
-        callback(!isActive);
-      }}
       active={isMarkActive(editor, format)}
       onMouseDown={(event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -870,6 +738,9 @@ const MarkButton: React.FC<{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          filter: isActive
+            ? "invert(31%) sepia(92%) saturate(666%) hue-rotate(100deg)"
+            : "none",
         }}
       >
         <img src={icon} alt="" style={{ objectFit: "cover" }} />
