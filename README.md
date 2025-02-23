@@ -38,8 +38,13 @@ This version prioritizes **stability** and **ease of use** over complex features
 
 4. **Mobile Toolbar Optimization**:
    - Toolbar auto-hides and auto-opens for a better mobile experience.
+5. **Add Validatation to the Editor and Example how to use**:
+   - simple validation like min and max length and check urls .
+6. **Add example how to use with react-hook-forms**:
 
 ---
+
+## added props :
 
 ## Customization
 
