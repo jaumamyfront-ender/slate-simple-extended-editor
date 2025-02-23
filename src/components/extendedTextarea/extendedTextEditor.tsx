@@ -25,7 +25,6 @@ import {
   withReact,
 } from "slate-react";
 import { Button, Toolbar } from "./buttonsToolbar";
-import isEqual from "lodash/isEqual";
 
 import { useMediaQuery } from "./useMediaQuery";
 import { Node, Text } from "slate";
@@ -108,7 +107,7 @@ interface CustomSlateProps extends ValidatorProps {
   staticImages: StaticImages;
   childrenErrorHint?: React.ReactNode;
   childrenLengthHint?: React.ReactNode;
-  onValidate: (result: ValidationResult) => void;
+  onValidate?: (result: ValidationResult) => void;
 }
 
 export type SlateEditorProps = EditablePropsWithoutRef & CustomSlateProps;
