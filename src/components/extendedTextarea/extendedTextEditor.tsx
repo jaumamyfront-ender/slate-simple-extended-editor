@@ -1,5 +1,11 @@
 import isHotkey from "is-hotkey";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   BaseEditor,
   createEditor,
@@ -19,10 +25,13 @@ import {
   withReact,
 } from "slate-react";
 import { Button, Toolbar } from "./buttonsToolbar";
+import isEqual from "lodash/isEqual";
 
 import { useMediaQuery } from "./useMediaQuery";
 import { Node, Text } from "slate";
 import { EditableProps } from "slate-react/dist/components/editable";
+import { relaxedUrlRegex } from "../../utils/findUrl";
+
 interface ImageSet {
   bold: string;
   center: string;
@@ -34,6 +43,30 @@ interface ImageSet {
   numbers: string;
   right: string;
   underline: string;
+}
+interface ValidatorProps {
+  minLength?: number;
+  maxLength?: number;
+  checkUrls?: boolean;
+  enableValidation?: boolean;
+  minLengthDecription?: string;
+  maxLengthDecription?: string;
+  checkUrlsDecription?: string;
+}
+interface ValidatorConfig {
+  enableValidation?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  checkUrls?: boolean;
+}
+
+export interface Error {
+  message: string;
+  type: "maxLength" | "minLength" | "dontUseLinksinDescription";
+}
+interface ValidationResult {
+  length: number;
+  error: Error | undefined;
 }
 
 interface StaticImages {
@@ -69,10 +102,13 @@ interface BlockButtonProps {
 
 type EditablePropsWithoutRef = Omit<EditableProps, "ref">;
 
-interface CustomSlateProps {
+interface CustomSlateProps extends ValidatorProps {
   incomingData?: string;
   outgoingData?: (data: string) => void;
   staticImages: StaticImages;
+  childrenErrorHint?: React.ReactNode;
+  childrenLengthHint?: React.ReactNode;
+  onValidate: (result: ValidationResult) => void;
 }
 
 export type SlateEditorProps = EditablePropsWithoutRef & CustomSlateProps;
@@ -106,6 +142,16 @@ const TEXT_ALIGN_TYPES = ["left", "center", "right", "justify"];
 const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   incomingData,
   staticImages,
+  checkUrls,
+  enableValidation,
+  maxLength,
+  minLength,
+  minLengthDecription,
+  maxLengthDecription,
+  checkUrlsDecription,
+  childrenErrorHint,
+  childrenLengthHint,
+  onValidate,
   ...editableProps
 }) => {
   const staticIcons = staticImages.staticIcons;
@@ -347,10 +393,60 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [openToolbarOnMobile, setopenToolbarOnMobile] =
     useState<boolean>(false);
+  const [error, setError] = useState<any>();
 
   const [editorValue, setEditorValue] = useState<Descendant[]>(() =>
     initialValueFromProps(incomingData)
   );
+
+  const validateText = useCallback(
+    (content: string, config: ValidatorConfig): ValidationResult => {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = content;
+      const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+      const textLength = cleanText.length;
+
+      let errorMessage: Error | undefined;
+      if (config.enableValidation) {
+        if (config.minLength && textLength < config.minLength) {
+          errorMessage = {
+            message: `Minimum characters required: ${config.minLength}`,
+            type: "minLength",
+          };
+        }
+
+        if (config.maxLength && textLength > config.maxLength) {
+          errorMessage = {
+            message: `Maximum characters allowed: ${config.maxLength}`,
+            type: "maxLength",
+          };
+        }
+
+        if (config.checkUrls && relaxedUrlRegex.test(cleanText)) {
+          errorMessage = {
+            message: "Links are not allowed.",
+            type: "dontUseLinksinDescription",
+          };
+        }
+      }
+
+      setError(errorMessage);
+      return { length: textLength, error: errorMessage };
+    },
+    []
+  );
+
+  const handleEditorChange = (value: Descendant[]) => {
+    setEditorValue(value);
+    const html = serializeToHtml(value);
+    const result = validateText(html, {
+      enableValidation: enableValidation,
+      checkUrls: checkUrls,
+      maxLength: maxLength,
+      minLength: minLength,
+    });
+    onValidate(result);
+  };
 
   useEffect(() => {
     if (incomingData !== undefined) {
@@ -437,7 +533,11 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   };
 
   return (
-    <Slate editor={editor} initialValue={editorValue} onChange={setEditorValue}>
+    <Slate
+      editor={editor}
+      initialValue={editorValue}
+      onChange={handleEditorChange}
+    >
       {isDesktop && !isMobile && renderToolbar()}
 
       <Editable
@@ -472,11 +572,14 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
           overflow: "scroll",
           wordWrap: "break-word",
           wordBreak: "break-all",
+          position: "relative",
         }}
         onFocus={() => {
           isMobile && setopenToolbarOnMobile(true);
         }}
       />
+      {childrenLengthHint}
+      {error && childrenErrorHint}
       {isMobile && openToolbarOnMobile && renderToolbar()}
     </Slate>
   );

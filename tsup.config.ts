@@ -9,4 +9,8 @@ export default defineConfig({
     ".svg": "file",
   },
   clean: true,
+  minify: false, // Disable minification
+  treeshake: false, // Disable tree shaking
+  sourcemap: true, // Keep the code readable with source maps
+  keepNames: true, // Preserve function and class names
 });
