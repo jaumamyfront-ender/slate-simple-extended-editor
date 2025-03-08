@@ -836,7 +836,7 @@ const BlockButton: React.FC<BlockButtonProps> = ({
     format,
     TEXT_ALIGN_TYPES.includes(format) ? "align" : "type"
   );
-  console.log(colorOnClick);
+
   return (
     <Button
       active={isBlockActive(
@@ -872,7 +872,7 @@ const MarkButton: React.FC<BlockButtonProps> = ({
 }) => {
   const editor = useSlate();
   const isActive = isMarkActive(editor, format);
-  console.log(isActive);
+
   return (
     <Button
       active={isMarkActive(editor, format)}
