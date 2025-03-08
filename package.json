@@ -1,6 +1,6 @@
 {
   "name": "slate-simple-editor",
-  "version": "3.0.0",
+  "version": "1.1.1",
   "description": "A streamlined, TypeScript-friendly Slate.js simple-editor implementation",
   "license": "Apache-2.0",
   "keywords": [
@@ -15,6 +15,11 @@
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "files": [
+  "dist",
+  "public"
+],
+
   "scripts": {
     "dev": "next dev",
     "build": "tsup ./src/components/extendedTextarea/extendedTextEditor.tsx --format esm,cjs --dts",
