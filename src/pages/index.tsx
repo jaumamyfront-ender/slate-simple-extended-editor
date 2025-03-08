@@ -3,6 +3,27 @@ import dynamic from "next/dynamic";
 import { SlateEditorProps } from "../components/extendedTextarea/extendedTextEditor";
 import React, { useState } from "react";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
+interface LengthHintProps {
+  maxLength?: number;
+  valueLength: number;
+}
+interface FieldTooltipErrorProps {
+  error?: any;
+  className?: string;
+  isAbsolute?: boolean;
+  minLength?: number;
+  maxLength?: number;
+}
+export interface Error {
+  message: string;
+  type: "maxLength" | "minLength" | "dontUseLinksinDescription";
+}
+interface ValidationResult {
+  length: number;
+  error: Error | undefined;
+}
 const productsData = [
   { id: 1, name: "Apple", description: "Fresh and juicy apple" },
   { id: 2, name: "Banana", description: "Ripe and sweet banana" },
@@ -50,6 +71,7 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
             setSelectedIndex(
               productsData.findIndex((p) => p.id.toString() === e.target.value)
             );
+            setDecscription(e.target.value);
           }}
         >
           <option value="" className="text-gray-700 bg-gray-100 self-end">
@@ -85,15 +107,47 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
   const parsed = parsedContent(description);
   const setDecscription = (data: any) => {
     const convertedToStringAllData = JSON.stringify(data);
+
     setValue(
       `products.${selectedProductIndex}.description`,
-
       convertedToStringAllData
     );
   };
   const parseIncomming = JSON.stringify(parsed);
+  //=======================================================================================
+  //validation
+  const [length, setlength] = useState<any>();
+  const [error, setError] = useState<any>();
+  const takeValidationResult = (value: ValidationResult) => {
+    setlength(value.length);
+    setError(value.error);
+    console.log("valueresultvalidation", value);
+  };
+  console.log(error);
+
+  const LengthHint: React.FC<LengthHintProps> = ({
+    maxLength,
+    valueLength,
+  }) => {
+    if (!maxLength) return null;
+
+    return (
+      <span className="absolute bottom-100 top-[450px] right-[290px] text-gray-200 text-2xs">
+        {`${valueLength}/${maxLength}`}
+      </span>
+    );
+  };
+  //validation
+  //=======================================================================================
 
   console.log(parsed);
+  //example filter color
+  const activeFilterBlue =
+    "invert(23%) sepia(94%) saturate(1740%) hue-rotate(200deg) brightness(90%) contrast(85%)";
+  const activeFilterGreen =
+    "invert(31%) sepia(92%) saturate(666%) hue-rotate(100deg)";
+  //example filter color
+
   return (
     <FormProvider {...methods}>
       <div className="flex items-center content-center flex-col bg-gray-400 justify-between min-h-[500px] w-[100%]  ">
@@ -121,6 +175,16 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
                   underline: "/customIcons/white/underline.svg",
                 },
               }}
+              colorOnClick={activeFilterBlue}
+              onValidate={(value) => takeValidationResult(value)}
+              enableValidation
+              checkUrls
+              minLength={5}
+              maxLength={100}
+              childrenLengthHint={
+                <LengthHint maxLength={1000} valueLength={length} />
+              }
+              childrenErrorHint={<ErrorHint error={error} />}
             />
           </div>
           <p className="pt-12 text-black">
@@ -141,7 +205,7 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
             (() => {
               const containsHTML = /<\/?[a-z][\s\S]*>/i.test(parsed);
               let cleanedHtml = parsed
-                ?.replace(/^"(.*)"$/, "$1")
+                .replace(/^"(.*)"$/, "$1")
                 .replace(/\\r\\n/g, "\n")
                 .replace(/\\n/g, "\n")
                 .replace(/\\n/g, "\n")
@@ -163,3 +227,15 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
   );
 };
 export default SlateSimpleEditorWrapper;
+const ErrorHint = ({ error, className }: FieldTooltipErrorProps) => {
+  if (!error) return null;
+
+  return (
+    <div className="flex flex-row items-center absolute top-[450px] right-120 ">
+      <FontAwesomeIcon icon={faCircleExclamation} className={className} />
+      <div className="flex ml-2">
+        <div className="flex ml-1">{error.message}</div>
+      </div>
+    </div>
+  );
+};

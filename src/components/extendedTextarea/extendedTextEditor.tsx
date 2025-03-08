@@ -97,6 +97,7 @@ interface BlockButtonProps {
   format: string;
   icon: string;
   formatIndex?: string;
+  colorOnClick?: string;
 }
 
 type EditablePropsWithoutRef = Omit<EditableProps, "ref">;
@@ -108,6 +109,7 @@ interface CustomSlateProps extends ValidatorProps {
   childrenErrorHint?: React.ReactNode;
   childrenLengthHint?: React.ReactNode;
   onValidate?: (result: ValidationResult) => void;
+  colorOnClick?: string;
 }
 
 export type SlateEditorProps = EditablePropsWithoutRef & CustomSlateProps;
@@ -151,6 +153,7 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   childrenErrorHint,
   childrenLengthHint,
   onValidate,
+  colorOnClick,
   ...editableProps
 }) => {
   const staticIcons = staticImages.staticIcons;
@@ -392,7 +395,12 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [openToolbarOnMobile, setopenToolbarOnMobile] =
     useState<boolean>(false);
-  const [error, setError] = useState<any>();
+
+  interface Errors {
+    message: any;
+    type: "maxLength" | "dontUseLinksinDescription";
+  }
+  const [error, setError] = useState<Errors>();
 
   const [editorValue, setEditorValue] = useState<Descendant[]>(() =>
     initialValueFromProps(incomingData)
@@ -444,7 +452,9 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
       maxLength: maxLength,
       minLength: minLength,
     });
-    onValidate(result);
+    if (onValidate) {
+      onValidate(result);
+    }
   };
 
   useEffect(() => {
@@ -517,16 +527,56 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
   const renderToolbar = () => {
     return (
       <Toolbar>
-        <MarkButton format="bold" icon={staticIcons.bold} />
-        <MarkButton format="italic" icon={staticIcons.italic} />
-        <MarkButton format="underline" icon={staticIcons.underline} />
-        <BlockButton format="heading-one" icon={staticIcons.h1} />
-        <BlockButton format="heading-two" icon={staticIcons.h2} />
-        <BlockButton format="numbered-list" icon={staticIcons.numbers} />
-        <BlockButton format="bulleted-list" icon={staticIcons.dots} />
-        <BlockButton format="left" icon={staticIcons.left} />
-        <BlockButton format="center" icon={staticIcons.center} />
-        <BlockButton format="right" icon={staticIcons.right} />
+        <MarkButton
+          format="bold"
+          icon={staticIcons.bold}
+          colorOnClick={colorOnClick}
+        />
+        <MarkButton
+          format="italic"
+          icon={staticIcons.italic}
+          colorOnClick={colorOnClick}
+        />
+        <MarkButton
+          format="underline"
+          icon={staticIcons.underline}
+          colorOnClick={colorOnClick}
+        />
+        <BlockButton
+          format="heading-one"
+          icon={staticIcons.h1}
+          colorOnClick={colorOnClick}
+        />
+        <BlockButton
+          format="heading-two"
+          icon={staticIcons.h2}
+          colorOnClick={colorOnClick}
+        />
+        <BlockButton
+          format="numbered-list"
+          icon={staticIcons.numbers}
+          colorOnClick={colorOnClick}
+        />
+        <BlockButton
+          format="bulleted-list"
+          icon={staticIcons.dots}
+          colorOnClick={colorOnClick}
+        />
+        <BlockButton
+          format="left"
+          icon={staticIcons.left}
+          colorOnClick={colorOnClick}
+        />
+        <BlockButton
+          format="center"
+          icon={staticIcons.center}
+          colorOnClick={colorOnClick}
+        />
+        <BlockButton
+          format="right"
+          icon={staticIcons.right}
+          colorOnClick={colorOnClick}
+        />
       </Toolbar>
     );
   };
@@ -558,6 +608,12 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
           }
         }}
         disableDefaultStyles={true}
+        // readOnly={
+        //   (enableValidation && error?.type === "maxLength") ||
+        //   error?.type === "dontUseLinksinDescription"
+        //     ? true
+        //     : false
+        // }
         style={{
           padding: "0 10px",
           marginBottom: 10,
@@ -769,20 +825,10 @@ const Leaf: React.FC<RenderLeafProps> = ({ attributes, children, leaf }) => {
   return <span {...attributes}>{children}</span>;
 };
 
-const FORMAT_MAPPING = {
-  h1: "heading-one",
-  h2: "heading-two",
-  number: "numbered-list",
-  dots: "bulleted-list",
-  left: "left",
-  center: "center",
-  right: "right",
-};
-
 const BlockButton: React.FC<BlockButtonProps> = ({
   format,
   icon,
-  formatIndex,
+  colorOnClick,
 }) => {
   const editor = useSlate();
   const isActive = isBlockActive(
@@ -790,7 +836,7 @@ const BlockButton: React.FC<BlockButtonProps> = ({
     format,
     TEXT_ALIGN_TYPES.includes(format) ? "align" : "type"
   );
-
+  console.log(colorOnClick);
   return (
     <Button
       active={isBlockActive(
@@ -810,9 +856,7 @@ const BlockButton: React.FC<BlockButtonProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          filter: isActive
-            ? "invert(31%) sepia(92%) saturate(666%) hue-rotate(100deg)"
-            : "none",
+          filter: isActive ? colorOnClick : "none",
         }}
       >
         <img src={icon} alt="" style={{ objectFit: "cover" }} />
@@ -821,10 +865,14 @@ const BlockButton: React.FC<BlockButtonProps> = ({
   );
 };
 
-const MarkButton: React.FC<BlockButtonProps> = ({ format, icon }) => {
+const MarkButton: React.FC<BlockButtonProps> = ({
+  format,
+  icon,
+  colorOnClick,
+}) => {
   const editor = useSlate();
   const isActive = isMarkActive(editor, format);
-
+  console.log(isActive);
   return (
     <Button
       active={isMarkActive(editor, format)}
@@ -840,9 +888,7 @@ const MarkButton: React.FC<BlockButtonProps> = ({ format, icon }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          filter: isActive
-            ? "invert(31%) sepia(92%) saturate(666%) hue-rotate(100deg)"
-            : "none",
+          filter: isActive ? colorOnClick : "none",
         }}
       >
         <img src={icon} alt="" style={{ objectFit: "cover" }} />
