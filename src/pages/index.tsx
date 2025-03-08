@@ -207,7 +207,10 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
                   .trim();
 
                 return containsHTML ? (
-                  <span dangerouslySetInnerHTML={{ __html: cleanedHtml }} />
+                  <span
+                    dangerouslySetInnerHTML={{ __html: cleanedHtml }}
+                    className="p-2"
+                  />
                 ) : (
                   <span>{parsedForUI}</span>
                 );

@@ -492,8 +492,15 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
 
       Transforms.select(editor, { path: [0, 0], offset: 0 });
       if (editor.selection) {
-        Transforms.delete(editor, { at: editor.selection });
+        const node = Node.get(editor, editor.selection.anchor.path);
+        if (Text.isText(node)) {
+          Transforms.delete(editor, { at: editor.selection });
+        }
       }
+
+      // if (editor.selection) {
+      //   Transforms.delete(editor, { at: editor.selection });
+      // }
       Transforms.removeNodes(editor);
       Transforms.insertNodes(editor, newValue);
     }
@@ -755,13 +762,13 @@ const Element: React.FC<RenderElementProps> = ({
 
   const elementStyles: Record<string, React.CSSProperties> = {
     "heading-one": {
-      fontSize: "1.7em",
+      fontSize: "1.4em",
       fontWeight: "bold",
       margin: "0.37em 0",
       lineHeight: "1.2",
     },
     "heading-two": {
-      fontSize: "1.4em",
+      fontSize: "1.2em",
       fontWeight: "bold",
       margin: "0.33em 0",
       lineHeight: "1.2",
