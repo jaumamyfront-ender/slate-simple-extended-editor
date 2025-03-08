@@ -6,7 +6,8 @@ Just use it without pain! ;-)
 
 ## How It Looks and How to Start
 
-![Demo](./public/visualize.png)
+![Demo](./public/hil%20(1).png)
+![Demo](./public/hil%20(2).png)
 
 ---
 
