@@ -459,9 +459,9 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
 
   useEffect(() => {
     if (incomingData !== undefined) {
-      console.log("initialValueFromProps", initialValueFromProps(incomingData));
+      // console.log("initialValueFromProps", initialValueFromProps(incomingData));
       initialValueFromProps(incomingData);
-      console.log("state editor when empty or loading", editor, editorValue);
+      // console.log("state editor when empty or loading", editor, editorValue);
 
       setEditorValue(initialValueFromProps(incomingData));
     }

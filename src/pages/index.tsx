@@ -86,10 +86,9 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
       </div>
     );
   };
-  console.log("selectedProductIndex", selectedProductIndex);
+
   const description =
     watch(`products.${selectedProductIndex}.description`) || "";
-  console.log("setted description after editor", description);
 
   function parseDescription(value: any) {
     try {
@@ -119,9 +118,7 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
   const takeValidationResult = (value: ValidationResult) => {
     setlength(value.length);
     setError(value.error);
-    console.log("valueresultvalidation", value);
   };
-  console.log(error);
 
   const LengthHint: React.FC<LengthHintProps> = ({
     maxLength,
@@ -156,7 +153,6 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
               key={selectedProductIndex}
               incomingData={parseIncommingForEditor}
               outgoingData={(data) => {
-                console.log("(outgoingData)Saving:", data);
                 setDecscription(data);
               }}
               staticImages={{
