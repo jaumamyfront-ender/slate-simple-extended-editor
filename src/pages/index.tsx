@@ -128,7 +128,7 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
 
     return (
       <span className="absolute bottom-100 top-[450px] right-[290px] text-gray-200 text-2xs">
-        {`${valueLength}/${maxLength}`}
+        {`${valueLength !== undefined ? valueLength : 0}/${maxLength}`}
       </span>
     );
   };
