@@ -100,6 +100,7 @@ For additional features or modifications, refer to the [official Slate.js docume
   import { useForm, FormProvider, useFormContext } from "react-hook-form";
   import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
   import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
+  import { SlateEditorProps } from "editor/dist/extendedTextEditor";
   interface LengthHintProps {
     maxLength?: number;
     valueLength: number;
@@ -130,7 +131,7 @@ For additional features or modifications, refer to the [official Slate.js docume
   ];
 
   const SlateSimpleEditor = dynamic(
-    () => import("../components/extendedTextarea/extendedTextEditor"),
+    () => import("editor/dist/extendedTextEditor"),
     {
       ssr: false,
       loading: () => (
