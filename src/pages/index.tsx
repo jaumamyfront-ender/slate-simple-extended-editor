@@ -43,9 +43,6 @@ const SlateSimpleEditor = dynamic(
     ),
   }
 );
-const a = (value: any) => {
-  console.log("exportedData", value);
-};
 
 const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
   const methods = useForm({
@@ -55,9 +52,10 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
     },
   });
   const { watch, setValue } = methods;
-  const [selectedProductIndex, setSelectedProductIndex] = useState(-1);
-  const ProductSelect = ({ setSelectedIndex }: any) => {
-    const { watch, setValue } = useFormContext();
+  const [selectedProductIndex, setSelectedProductIndex] = useState<any>(-1);
+
+  const ProductSelect = () => {
+    const { watch } = useFormContext();
     const selectedProductId = watch("selectedProduct");
 
     return (
@@ -69,11 +67,11 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
           className="border rounded-md p-2bg-white text-black text-right "
           value={selectedProductId}
           onChange={(e) => {
-            setValue("selectedProduct", e.target.value);
-            setSelectedIndex(
-              productsData.findIndex((p) => p.id.toString() === e.target.value)
+            const product = productsData.find(
+              (p) => p.id.toString() === e.target.value
             );
-            setDecscription(e.target.value);
+
+            setDecscription(product?.description || "");
           }}
         >
           <option value="" className="text-gray-700 bg-gray-100 self-end">
@@ -88,7 +86,7 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
       </div>
     );
   };
-
+  console.log("selectedProductIndex", selectedProductIndex);
   const description =
     watch(`products.${selectedProductIndex}.description`) || "";
   console.log("setted description after editor", description);
@@ -150,11 +148,12 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
   return (
     <FormProvider {...methods}>
       <div className="flex items-center content-center flex-col bg-gray-400 justify-between min-h-[500px] w-[100%]  ">
-        <ProductSelect setSelectedIndex={setSelectedProductIndex} />
+        <ProductSelect />
 
-        <div className="flex items-center justify-center pt-10 bg-slate-300 flex-col w-[100%]">
+        <div className="flex items-center justify-center pt-10 pb-10 bg-slate-300 flex-col w-[100%]">
           <div className="flex items-center flex-col bg-gray-500 p-3 rounded-xl min-w-[50%] max-w-[40%]">
             <SlateSimpleEditor
+              key={selectedProductIndex}
               incomingData={parseIncommingForEditor}
               outgoingData={(data) => {
                 console.log("(outgoingData)Saving:", data);
@@ -186,12 +185,8 @@ const SlateSimpleEditorWrapper: React.FC<SlateEditorProps> = () => {
               childrenErrorHint={<ErrorHint error={error} />}
             />
           </div>
-          <p className="pt-12 text-black">
-            see broweser console to see incomming data and exported ready to
-            send from editor{" "}
-          </p>
         </div>
-        <div className="p-4 border rounded-md  flex flex-col mt-6">
+        <div className="p-4 border rounded-md  flex flex-col mt-6 mb-6">
           <strong>
             Description / how generated html text looks on other side of page :
           </strong>{" "}

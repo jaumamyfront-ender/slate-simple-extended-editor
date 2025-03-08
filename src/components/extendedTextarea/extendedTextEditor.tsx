@@ -398,7 +398,7 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
 
   interface Errors {
     message: any;
-    type: "maxLength" | "dontUseLinksinDescription";
+    type: "maxLength" | "dontUseLinksinDescription" | "minLength";
   }
   const [error, setError] = useState<Errors>();
 
@@ -413,7 +413,7 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
       const cleanText = tempDiv.textContent || tempDiv.innerText || "";
       const textLength = cleanText.length;
 
-      let errorMessage: Error | undefined;
+      let errorMessage: Errors | undefined;
       if (config.enableValidation) {
         if (config.minLength && textLength < config.minLength) {
           errorMessage = {
@@ -443,8 +443,8 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
     []
   );
 
-  const handleEditorChange = (value: Descendant[]) => {
-    setEditorValue(value);
+  const handleEditorChange = async (value: Descendant[]) => {
+    await setEditorValue(value);
     const html = serializeToHtml(value);
     const result = validateText(html, {
       enableValidation: enableValidation,
@@ -459,84 +459,45 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
 
   useEffect(() => {
     if (incomingData !== undefined) {
+      console.log("initialValueFromProps", initialValueFromProps(incomingData));
+      initialValueFromProps(incomingData);
+      console.log("state editor when empty or loading", editor, editorValue);
+
       setEditorValue(initialValueFromProps(incomingData));
     }
   }, [incomingData]);
-  // useEffect(() => {
-  //   const newValue = initialValueFromProps(incomingData);
-  //   const currentValue = editor.children;
-  //   if (JSON.stringify(currentValue) === JSON.stringify(newValue)) return;
-  //   if (!incomingData || isEqual(prevDataRef.current, incomingData)) return;
-  //   if (incomingData) {
-  //     const newValue = initialValueFromProps(incomingData);
-  //     const currentValue = editor.children;
+  useEffect(() => {
+    if (incomingData) {
+      const newValue = initialValueFromProps(incomingData);
+      const currentValue = editor.children;
+      // console.log("currentValueLENGTH", currentValue.length > 0);
+      // console.log("editor.children.length > 0", editor.children.length > 0);
+      // console.log("new value", newValue);
+      // console.log("new value", currentValue);
+      if (JSON.stringify(currentValue) === JSON.stringify(newValue)) {
+        return;
+      }
 
-  //     if (JSON.stringify(currentValue) === JSON.stringify(newValue)) {
-  //       return;
-  //     }
-  //     Transforms.select(editor, { path: [0, 0], offset: 0 });
-  //     Transforms.delete(editor, {
-  //       at: {
-  //         anchor: { path: [0, 0], offset: 0 },
-  //         focus: { path: [0, 0], offset: 0 },
-  //       },
-  //     });
+      if (editor.children.length > 0) {
+        Transforms.select(editor, { path: [0, 0], offset: 0 });
+        Transforms.delete(editor, {
+          at: {
+            // anchor: { path: [0, 0], offset: 0 },
+            // focus: { path: [0, 0], offset: 0 },
+            anchor: Editor.start(editor, []),
+            focus: Editor.end(editor, []),
+          },
+        });
+      }
 
-  //     Transforms.select(editor, { path: [0, 0], offset: 0 });
-  //     if (editor.selection) {
-  //       Transforms.delete(editor, { at: editor.selection });
-  //     }
-
-  //     Transforms.removeNodes(editor);
-  //     Transforms.insertNodes(editor, newValue);
-  //     const html = serializeToHtml(newValue);
-  //     const result = validateText(html, {
-  //       enableValidation: enableValidation,
-  //       checkUrls: checkUrls,
-  //       maxLength: maxLength,
-  //       minLength: minLength,
-  //     });
-  //     onValidate(result);
-  //   }
-  // }, [incomingData]);
-
-  const prevDataRef = useRef<string | null>(null);
-
-  // useEffect(() => {
-  //   if (!incomingData || isEqual(prevDataRef.current, incomingData)) return;
-  //   prevDataRef.current = incomingData; // Store previous data
-  //   const newValue = initialValueFromProps(incomingData);
-  //   const currentValue = editor.children;
-  //   if (JSON.stringify(currentValue) === JSON.stringify(newValue)) return;
-
-  //   if (isEqual(currentValue, newValue)) return;
-
-  //   Transforms.select(editor, { path: [0, 0], offset: 0 });
-  //   Transforms.delete(editor, {
-  //     at: {
-  //       anchor: { path: [0, 0], offset: 0 },
-  //       focus: { path: [0, 0], offset: 0 },
-  //     },
-  //   });
-
-  //   Transforms.select(editor, { path: [0, 0], offset: 0 });
-  //   if (editor.selection) {
-  //     Transforms.delete(editor, { at: editor.selection });
-  //   }
-
-  //   Transforms.removeNodes(editor);
-  //   Transforms.insertNodes(editor, newValue);
-
-  //   const html = serializeToHtml(newValue);
-  //   const result = validateText(html, {
-  //     enableValidation,
-  //     checkUrls,
-  //     maxLength,
-  //     minLength,
-  //   });
-
-  //   onValidate(result);
-  // }, [incomingData]);
+      Transforms.select(editor, { path: [0, 0], offset: 0 });
+      if (editor.selection) {
+        Transforms.delete(editor, { at: editor.selection });
+      }
+      Transforms.removeNodes(editor);
+      Transforms.insertNodes(editor, newValue);
+    }
+  }, [incomingData]);
 
   const serializeToHtml = (nodes: Node[]): string => {
     return nodes
