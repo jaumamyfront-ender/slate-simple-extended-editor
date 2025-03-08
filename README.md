@@ -6,8 +6,9 @@ Just use it without pain! ;-)
 
 ## How It Looks and How to Start
 
+![Demo](https://github.com/jaumamyfront-ender/slate-simple-extended-editor/blob/main/public/hil%20(1).png)
 ![Demo](./public/hil%20(1).png)
-![Demo](./public/hil%20(2).png)
+
 
 ---
 
@@ -69,7 +70,7 @@ This version prioritizes **stability** and **ease of use** over complex features
 ## Customization
 
 - If you don’t need extra features or customization and want to use the library as-is (without installing it), you can:
-  - Visit the [GitHub repository](https://github.com/jaumamyfront-ender/slate-simple-editor) to copy or fork the code.
+  - Visit the [GitHub repository](https://github.com/jaumamyfront-ender/slate-simple-extended-editor) to copy or fork the code.
   - Copy the source files from `node_modules/slate-simple-editor/src`.
 
 For additional features or modifications, refer to the [official Slate.js documentation](https://docs.slatejs.org).
