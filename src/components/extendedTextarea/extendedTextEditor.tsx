@@ -462,6 +462,81 @@ const SlateSimpleExtendedEditor: React.FC<SlateEditorProps> = ({
       setEditorValue(initialValueFromProps(incomingData));
     }
   }, [incomingData]);
+  // useEffect(() => {
+  //   const newValue = initialValueFromProps(incomingData);
+  //   const currentValue = editor.children;
+  //   if (JSON.stringify(currentValue) === JSON.stringify(newValue)) return;
+  //   if (!incomingData || isEqual(prevDataRef.current, incomingData)) return;
+  //   if (incomingData) {
+  //     const newValue = initialValueFromProps(incomingData);
+  //     const currentValue = editor.children;
+
+  //     if (JSON.stringify(currentValue) === JSON.stringify(newValue)) {
+  //       return;
+  //     }
+  //     Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //     Transforms.delete(editor, {
+  //       at: {
+  //         anchor: { path: [0, 0], offset: 0 },
+  //         focus: { path: [0, 0], offset: 0 },
+  //       },
+  //     });
+
+  //     Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //     if (editor.selection) {
+  //       Transforms.delete(editor, { at: editor.selection });
+  //     }
+
+  //     Transforms.removeNodes(editor);
+  //     Transforms.insertNodes(editor, newValue);
+  //     const html = serializeToHtml(newValue);
+  //     const result = validateText(html, {
+  //       enableValidation: enableValidation,
+  //       checkUrls: checkUrls,
+  //       maxLength: maxLength,
+  //       minLength: minLength,
+  //     });
+  //     onValidate(result);
+  //   }
+  // }, [incomingData]);
+
+  const prevDataRef = useRef<string | null>(null);
+
+  // useEffect(() => {
+  //   if (!incomingData || isEqual(prevDataRef.current, incomingData)) return;
+  //   prevDataRef.current = incomingData; // Store previous data
+  //   const newValue = initialValueFromProps(incomingData);
+  //   const currentValue = editor.children;
+  //   if (JSON.stringify(currentValue) === JSON.stringify(newValue)) return;
+
+  //   if (isEqual(currentValue, newValue)) return;
+
+  //   Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //   Transforms.delete(editor, {
+  //     at: {
+  //       anchor: { path: [0, 0], offset: 0 },
+  //       focus: { path: [0, 0], offset: 0 },
+  //     },
+  //   });
+
+  //   Transforms.select(editor, { path: [0, 0], offset: 0 });
+  //   if (editor.selection) {
+  //     Transforms.delete(editor, { at: editor.selection });
+  //   }
+
+  //   Transforms.removeNodes(editor);
+  //   Transforms.insertNodes(editor, newValue);
+
+  //   const html = serializeToHtml(newValue);
+  //   const result = validateText(html, {
+  //     enableValidation,
+  //     checkUrls,
+  //     maxLength,
+  //     minLength,
+  //   });
+
+  //   onValidate(result);
+  // }, [incomingData]);
 
   const serializeToHtml = (nodes: Node[]): string => {
     return nodes
