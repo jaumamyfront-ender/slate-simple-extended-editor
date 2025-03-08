@@ -92,7 +92,7 @@ For additional features or modifications, refer to the [official Slate.js docume
 
    **Next Example**:
 
-   ```jsx
+  ```jsx
   "use client";
   import dynamic from "next/dynamic";
   import { SlateEditorProps } from "../components/extendedTextarea/extendedTextEditor";
@@ -330,7 +330,7 @@ For additional features or modifications, refer to the [official Slate.js docume
     );
   };
 
-   ```
+  ```
 
 4. **Enjoy!**
 - Input your data and retrieve already prepared HTML to send to the backend.
