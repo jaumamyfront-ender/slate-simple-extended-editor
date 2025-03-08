@@ -47,19 +47,24 @@ This version prioritizes **stability** and **ease of use** over complex features
 
 ## added props :
 
-                incomingData=allows put you data in simple string
-                outgoingData=prepared generated new data from editor
-                staticImages=put the images on each icon whatever you wany
-                colorOnClick=color on click when button is active
-                onValidate=get data for validation and creating childrens that show you hint or something else
-                enableValidation = say that you want enable function that check text length or links
-                checkUrls = enable to checking urls
-                minLength={5}
-                maxLength={100}
-                childrenLengthHint={
-                  <LengthHint maxLength={1000} valueLength={length} /> = childrens hint that you put with result of error from validation
-                }
-                childrenErrorHint={<ErrorHint error={error} />} = childrens hint that you put with result of error from validation
+    incomingData = "Allows you to input data as a simple string";
+    outgoingData = "Prepares and generates new data from the editor";
+    staticImages = "Assign images to each icon as desired";
+    colorOnClick = "Changes color when the button is active";
+    onValidate = "Retrieves data for validation and creates child elements that display hints or other information";
+    enableValidation = "Enables a function that checks text length or links";
+    checkUrls = "Enables URL validation";
+    minLength = {5};
+    maxLength = {100};
+    childrenLengthHint = (
+      <LengthHint maxLength={1000} valueLength={length} /> 
+      // Child hint displaying validation error result
+    );
+    childrenErrorHint = (
+      <ErrorHint error={error} /> 
+      // Child hint displaying validation error result
+    );
+
 
 ## Customization
 
